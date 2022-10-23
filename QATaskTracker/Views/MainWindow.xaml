@@ -1,0 +1,457 @@
+﻿<Window
+    x:Class="QATaskTracker.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:QATaskTracker.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:QATaskTracker.Helpers"
+    xmlns:main="clr-namespace:QATaskTracker"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:QATaskTracker.ViewModels"
+    Title="QA Task Tracker"
+    Width="1300"
+    Height="811"
+    Background="{DynamicResource MaterialDesignPaper}"
+    FontFamily="{DynamicResource MaterialDesignFont}"
+    TextElement.FontSize="13"
+    TextElement.FontWeight="Regular"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextRenderingMode="Auto"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <viewModels:MainWindowViewModel />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!--  Converters  -->
+        <converters:StepStatusToVisibilityConverter x:Key="StepVisibleConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolVisibleConverter" />
+        <converters:StepStatusToBoolConverter x:Key="StepCheckedConverter" />
+        <converters:ProjectToStringConverter x:Key="ProjectStringConverter" />
+        <converters:TFSStatusToStringConverter x:Key="StatusStringConverter" />
+        <converters:TFSTypeToStringConverter x:Key="TypeStringConverter" />
+
+        <!--#region Styles-->
+        <!--  Highlight colours  -->
+        <SolidColorBrush x:Key="WaitingColour" Color="{Binding Path=Parameters.WaitingColour}" />
+        <SolidColorBrush x:Key="DoneColour" Color="{Binding Path=Parameters.DoneColour}" />
+        <SolidColorBrush x:Key="InProgressColour" Color="{Binding Path=Parameters.InProgressColour}" />
+        <SolidColorBrush x:Key="ReadyColour" Color="{Binding Path=Parameters.ReadyColour}" />
+        <SolidColorBrush x:Key="NotReadyColour" Color="{Binding Path=Parameters.NotReadyColour}" />
+
+        <!--  DataGridRow highlight based on Status  -->
+        <Style TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Waiting}">
+                    <Setter Property="Background" Value="{DynamicResource WaitingColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Done}">
+                    <Setter Property="Background" Value="{DynamicResource DoneColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Ready}">
+                    <Setter Property="Background" Value="{DynamicResource ReadyColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.NotReady}">
+                    <Setter Property="Background" Value="{DynamicResource NotReadyColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.InProgress}">
+                    <Setter Property="Background" Value="{DynamicResource InProgressColour}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  StackPanel highlight based on Status  -->
+        <Style x:Key="StyleHighlightStackPanel" TargetType="StackPanel">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Waiting}">
+                    <Setter Property="Background" Value="{DynamicResource WaitingColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Done}">
+                    <Setter Property="Background" Value="{DynamicResource DoneColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.Ready}">
+                    <Setter Property="Background" Value="{DynamicResource ReadyColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.NotReady}">
+                    <Setter Property="Background" Value="{DynamicResource NotReadyColour}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static helpers:TFSStatus.InProgress}">
+                    <Setter Property="Background" Value="{DynamicResource InProgressColour}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!--#endregion-->
+
+    </Window.Resources>
+
+    <materialDesign:DialogHost Identifier="RootDialog">
+        <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="10" />
+                </Grid.RowDefinitions>
+
+                <!--#region Top ColorZone-->
+                <materialDesign:ColorZone
+                    x:Name="TopColourZone"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Padding="5"
+                    DockPanel.Dock="Top"
+                    Mode="PrimaryMid">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Search Box  -->
+                        <DockPanel>
+                            <materialDesign:ColorZone
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                Panel.ZIndex="1"
+                                materialDesign:ShadowAssist.ShadowDepth="Depth1"
+                                CornerRadius="2"
+                                Mode="Standard">
+                                <TextBox
+                                    x:Name="SearchTextBox"
+                                    Grid.Column="0"
+                                    Height="32"
+                                    MinWidth="200"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    materialDesign:HintAssist.Hint="Search TFS"
+                                    materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
+                                    BorderThickness="0"
+                                    DockPanel.Dock="Left"
+                                    TextChanged="SearchTextBox_TextChanged" />
+                            </materialDesign:ColorZone>
+                        </DockPanel>
+
+                        <!--  App Title  -->
+                        <TextBlock
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            FontSize="22"
+                            Text="QA Task Tracker"
+                            TextAlignment="Center" />
+
+                        <!--  Header buttons  -->
+                        <StackPanel
+                            Grid.Column="2"
+                            Margin="0,10,0,0"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                            <!--  Save button  -->
+                            <materialDesign:Badged
+                                Badge="{Binding Path=ModifiedCount}"
+                                BadgeColorZoneMode="PrimaryDark"
+                                BadgeForeground="White"
+                                BadgePlacementMode="TopLeft">
+                                <Button
+                                    x:Name="SaveButton"
+                                    Width="54"
+                                    HorizontalContentAlignment="Left"
+                                    VerticalContentAlignment="Center"
+                                    Click="SaveButton_Click"
+                                    DockPanel.Dock="Right"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                    ToolTip="Save">
+                                    <materialDesign:PackIcon
+                                        Width="24"
+                                        Height="24"
+                                        Kind="ContentSaveOutline" />
+                                </Button>
+                            </materialDesign:Badged>
+                            <!--  Parameters button  -->
+                            <Button
+                                x:Name="ParametersButton"
+                                Width="54"
+                                HorizontalContentAlignment="Left"
+                                VerticalContentAlignment="Center"
+                                Command="{Binding OpenParametersDialog}"
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                ToolTip="Parameters">
+                                <materialDesign:PackIcon
+                                    Width="24"
+                                    Height="24"
+                                    materialDesign:ColorZoneAssist.Mode="Light"
+                                    Kind="SettingsOutline" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:ColorZone>
+                <!--#endregion-->
+
+                <!--#region Task Data grid-->
+                <DataGrid
+                    x:Name="TaskDataGrid"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    materialDesign:DataGridAssist.CellPadding="4,3,3,2"
+                    materialDesign:DataGridAssist.ColumnHeaderPadding="4,3,3,2"
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="False"
+                    CanUserSortColumns="True"
+                    EnableRowVirtualization="True"
+                    ItemsSource="{Binding DisplayedTasks}"
+                    MouseDoubleClick="TaskDataGrid_DoubleClick"
+                    PreviewKeyDown="TaskDataGrid_PreviewKeyDown"
+                    RowDetailsVisibilityMode="VisibleWhenSelected"
+                    SelectionChanged="TaskDataGrid_SelectionChanged">
+                    <DataGrid.Resources>
+                        <helpers:BindingProxy x:Key="DisplayTFSProxy" Data="{Binding Path=Parameters.DisplayTFS}" />
+                        <helpers:BindingProxy x:Key="DisplayProjectProxy" Data="{Binding Path=Parameters.DisplayProject}" />
+                        <helpers:BindingProxy x:Key="DisplayTypeProxy" Data="{Binding Path=Parameters.DisplayType}" />
+                        <helpers:BindingProxy x:Key="DisplayStatusProxy" Data="{Binding Path=Parameters.DisplayStatus}" />
+                        <helpers:BindingProxy x:Key="DisplayPriorityProxy" Data="{Binding Path=Parameters.DisplayPriority}" />
+                        <helpers:BindingProxy x:Key="DisplayIterationProxy" Data="{Binding Path=Parameters.DisplayIteration}" />
+                        <helpers:BindingProxy x:Key="DisplayTicketProxy" Data="{Binding Path=Parameters.DisplayTicket}" />
+                        <helpers:BindingProxy x:Key="DisplayUserStoryProxy" Data="{Binding Path=Parameters.DisplayUserStory}" />
+                        <helpers:BindingProxy x:Key="DisplayDevTaskProxy" Data="{Binding Path=Parameters.DisplayDevTask}" />
+                        <helpers:BindingProxy x:Key="DisplayDeveloperProxy" Data="{Binding Path=Parameters.DisplayDeveloper}" />
+                        <helpers:BindingProxy x:Key="DisplayCustomerProxy" Data="{Binding Path=Parameters.DisplayCustomer}" />
+                        <helpers:BindingProxy x:Key="DisplayDescriptionProxy" Data="{Binding Path=Parameters.DisplayDescription}" />
+                        <helpers:BindingProxy x:Key="DisplayNotesProxy" Data="{Binding Path=Parameters.DisplayNotes}" />
+                        <helpers:BindingProxy x:Key="DisplayCreatedDateProxy" Data="{Binding Path=Parameters.DisplayCreatedDate}" />
+                        <helpers:BindingProxy x:Key="DisplayClosedDateProxy" Data="{Binding Path=Parameters.DisplayClosedDate}" />
+                        <helpers:BindingProxy x:Key="DisplayVersionProxy" Data="{Binding Path=Parameters.DisplayVersion}" />
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridComboBoxColumn
+                            Width="Auto"
+                            Header="Project"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Source={StaticResource ProjectStringConverter}, Path=Values}"
+                            SelectedItemBinding="{Binding Project, Converter={StaticResource ProjectStringConverter}, Mode=OneWay}"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayProjectProxy}}" />
+                        <DataGridComboBoxColumn
+                            Width="Auto"
+                            Header="Status"
+                            IsReadOnly="False"
+                            ItemsSource="{Binding Source={StaticResource StatusStringConverter}, Path=Values}"
+                            SelectedItemBinding="{Binding Status, Converter={StaticResource StatusStringConverter}}"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayStatusProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Priority}"
+                            Header="Priority"
+                            IsReadOnly="False"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayPriorityProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding WorkingVersion}"
+                            Header="Version"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayVersionProxy}}" />
+                        <DataGridComboBoxColumn
+                            Width="Auto"
+                            Header="Type"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Source={StaticResource TypeStringConverter}, Path=Values}"
+                            SelectedItemBinding="{Binding Type, Converter={StaticResource TypeStringConverter}}"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayTypeProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding TFS}"
+                            Header="TFS"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayTFSProxy}}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            Binding="{Binding Description}"
+                            Header="Description"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayDescriptionProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Ticket}"
+                            Header="Ticket"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayTicketProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Customer}"
+                            Header="Customer"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayCustomerProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding UserStory}"
+                            Header="User Story"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayUserStoryProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding DevTask}"
+                            Header="Dev Task"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayDevTaskProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Developer}"
+                            Header="Developer"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayDeveloperProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Iteration}"
+                            Header="Iteration"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayIterationProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding Notes}"
+                            Header="Notes"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayNotesProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding CreatedDate, StringFormat=yyyy/MM/dd HH:mm}"
+                            Header="Created Date"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayCreatedDateProxy}}" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding ClosedDate, StringFormat=yyyy/MM/dd HH:mm}"
+                            Header="Closed Date"
+                            IsReadOnly="True"
+                            Visibility="{Binding Data, Converter={StaticResource BoolVisibleConverter}, Source={StaticResource DisplayClosedDateProxy}}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+                <!--#endregion-->
+
+                <!--  GridSplitter  -->
+                <GridSplitter
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="5"
+                    HorizontalAlignment="Stretch"
+                    ResizeDirection="Rows" />
+
+                <!--#region Task Version Detail section-->
+                <ScrollViewer
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Margin="0,10,0,0"
+                    Background="{DynamicResource MaterialDesignPaper}"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="TaskVersionDetailItemsControl" ItemsSource="{Binding SelectedTask.TaskVersionDetails}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Padding="5"
+                                    BorderBrush="Black"
+                                    BorderThickness="1">
+                                    <StackPanel Orientation="Vertical">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100" />
+                                                <ColumnDefinition Width="150" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="auto" />
+                                                <RowDefinition Height="10" />
+                                                <RowDefinition Height="auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!--  Row 0  -->
+                                            <StackPanel
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                Margin="0,0,5,0"
+                                                Style="{StaticResource StyleHighlightStackPanel}">
+                                                <TextBlock
+                                                    Margin="0,5,0,0"
+                                                    FontWeight="Bold"
+                                                    Text="{Binding Path=Version}"
+                                                    TextAlignment="Center" />
+                                            </StackPanel>
+                                            <ComboBox
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                ItemsSource="{Binding Source={StaticResource StatusStringConverter}, Path=Values}"
+                                                SelectedItem="{Binding Path=Status, Converter={StaticResource StatusStringConverter}, Mode=TwoWay}" />
+                                            <TextBox
+                                                Grid.Row="0"
+                                                Grid.Column="2"
+                                                Margin="5,0,0,0"
+                                                VerticalContentAlignment="Center"
+                                                Text="{Binding Path=Notes, Mode=TwoWay}"
+                                                TextWrapping="Wrap" />
+
+                                            <!--  Row 2  -->
+                                            <WrapPanel
+                                                Grid.Row="2"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="4"
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <ItemsControl ItemsSource="{Binding Path=AllSteps}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel Orientation="Horizontal" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox
+                                                                Margin="0,0,20,10"
+                                                                Content="{Binding Path=Name}"
+                                                                FlowDirection="RightToLeft"
+                                                                IsChecked="{Binding Path=Status, Converter={StaticResource StepCheckedConverter}, Mode=TwoWay}"
+                                                                Style="{StaticResource MaterialDesignCheckBox}"
+                                                                Visibility="{Binding Path=Status, Converter={StaticResource StepVisibleConverter}}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </WrapPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <!--#endregion-->
+
+                <!--  Add Button  -->
+                <Button
+                    x:Name="NewButton"
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Margin="0,0,10,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Command="{Binding OpenNewTaskDialog}"
+                    Style="{StaticResource MaterialDesignFloatingActionAccentButton}"
+                    ToolTip="Add new task">
+                    <materialDesign:PackIcon
+                        Width="24"
+                        Height="24"
+                        Kind="Plus" />
+                </Button>
+            </Grid>
+        </materialDesign:DrawerHost>
+    </materialDesign:DialogHost>
+</Window>

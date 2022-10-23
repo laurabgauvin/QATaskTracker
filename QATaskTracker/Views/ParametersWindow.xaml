@@ -1,0 +1,481 @@
+﻿<UserControl
+    x:Class="QATaskTracker.Views.ParametersWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:QATaskTracker.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:main="clr-namespace:QATaskTracker"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:QATaskTracker.Models"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:viewModels="clr-namespace:QATaskTracker.ViewModels"
+    xmlns:views="clr-namespace:QATaskTracker.Views"
+    xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
+    Name="ParamsForm"
+    Width="Auto"
+    Height="Auto"
+    Background="{DynamicResource MaterialDesignPaper}"
+    FontFamily="{DynamicResource MaterialDesignFont}"
+    PreviewKeyDown="ParamsForm_PreviewKeyDown"
+    TextElement.FontSize="13"
+    TextElement.FontWeight="Regular"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextRenderingMode="Auto"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <viewModels:ParametersWindowViewModel />
+    </UserControl.DataContext>
+
+    <UserControl.Resources>
+        <!--  Converters  -->
+        <converters:ProjectToStringConverter x:Key="ProjectStringConverter" />
+
+        <!--  Highlight colours  -->
+        <SolidColorBrush x:Key="WaitingColour" Color="{Binding Path=Parameters.WaitingColour}" />
+        <SolidColorBrush x:Key="DoneColour" Color="{Binding Path=Parameters.DoneColour}" />
+        <SolidColorBrush x:Key="InProgressColour" Color="{Binding Path=Parameters.InProgressColour}" />
+        <SolidColorBrush x:Key="ReadyColour" Color="{Binding Path=Parameters.ReadyColour}" />
+        <SolidColorBrush x:Key="NotReadyColour" Color="{Binding Path=Parameters.NotReadyColour}" />
+
+        <!--  Default textblock style  -->
+        <Style TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="0,0,5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  Colour selection button style  -->
+        <Style x:Key="StyleColourButton" TargetType="Button">
+            <Setter Property="Height" Value="25" />
+            <Setter Property="Width" Value="25" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            Name="border"
+                            Padding="4,2"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="DarkGray"
+                            BorderThickness="1"
+                            CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="Black" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid DataContext="{Binding Path=Parameters}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="10" />
+        </Grid.RowDefinitions>
+
+        <!--  Row 1: General Parameters  -->
+        <GroupBox
+            Grid.Row="1"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Header="General Parameters">
+            <ComboBox
+                Name="DefaultProjectComboBox"
+                HorizontalAlignment="Left"
+                materialDesign:HintAssist.Hint="Default Project"
+                ItemsSource="{Binding Source={StaticResource ProjectStringConverter}, Path=Values}"
+                SelectedItem="{Binding Path=DefaultProject, Converter={StaticResource ProjectStringConverter}}"
+                Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+        </GroupBox>
+
+        <!--  Row 2: Project Green Parameters  -->
+        <GroupBox
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="0,10,5,0"
+            Header="Project Green Parameters">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+
+                <!--  Col 0: Versions List  -->
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox
+                        x:Name="PGNewVersion"
+                        Grid.Row="0"
+                        Grid.Column="0" />
+
+                    <Button
+                        x:Name="PGAddVersionButton"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        VerticalAlignment="Top"
+                        Click="PGAddVersionButton_Click"
+                        Content="{materialDesign:PackIcon Add}" />
+
+                    <ListBox
+                        x:Name="PGVersionsList"
+                        Grid.Row="1"
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        MinWidth="60"
+                        MinHeight="130"
+                        VerticalAlignment="Top"
+                        ItemsSource="{Binding Path=PGVersions}" />
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <Button
+                            x:Name="PGMoveUpButton"
+                            Click="PGMoveUpButton_Click"
+                            Content="{materialDesign:PackIcon ArrowUpBold}" />
+
+                        <Button
+                            x:Name="PGMoveDownButton"
+                            Click="PGMoveDownButton_Click"
+                            Content="{materialDesign:PackIcon ArrowDownBold}" />
+
+                        <Button
+                            x:Name="PGRemoveVersionButton"
+                            Click="PGRemoveVersionButton_Click"
+                            Content="{materialDesign:PackIcon RemoveCircle}" />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Col 1: Other Parameters  -->
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Orientation="Vertical">
+                    <ComboBox
+                        Name="PGReleasedVersionComboBox"
+                        materialDesign:HintAssist.Hint="Released"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PGVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PGReleasedVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <ComboBox
+                        Name="PGBetaVersionComboBox"
+                        materialDesign:HintAssist.Hint="Beta"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PGVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PGBetaVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <ComboBox
+                        Name="PGDevVersionComboBox"
+                        materialDesign:HintAssist.Hint="Dev"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PGVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PGDevVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <TextBox
+                        Name="PGIterationText"
+                        materialDesign:HintAssist.Hint="Iteration"
+                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                        Text="{Binding Path=PGIteration, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <!--  Row 2: Project Magenta Parameters  -->
+        <GroupBox
+            Grid.Row="2"
+            Grid.Column="2"
+            Margin="5,10,0,0"
+            Header="Project Magenta Parameters">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+
+                <!--  Col 0: Versions List  -->
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBox
+                        x:Name="PMNewVersion"
+                        Grid.Row="0"
+                        Grid.Column="0" />
+
+                    <Button
+                        x:Name="PMAddVersionButton"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        VerticalAlignment="Top"
+                        Click="PMAddVersionButton_Click"
+                        Content="{materialDesign:PackIcon Add}" />
+
+                    <ListBox
+                        x:Name="PMVersionsList"
+                        Grid.Row="1"
+                        Grid.RowSpan="2"
+                        Grid.Column="0"
+                        MinWidth="60"
+                        MinHeight="130"
+                        VerticalAlignment="Top"
+                        ItemsSource="{Binding Path=PMVersions}" />
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <Button
+                            x:Name="PMMoveUpButton"
+                            Click="PMMoveUpButton_Click"
+                            Content="{materialDesign:PackIcon ArrowUpBold}" />
+
+                        <Button
+                            x:Name="PMMoveDownButton"
+                            Click="PMMoveDownButton_Click"
+                            Content="{materialDesign:PackIcon ArrowDownBold}" />
+
+                        <Button
+                            x:Name="PMRemoveVersionButton"
+                            Click="PMRemoveVersionButton_Click"
+                            Content="{materialDesign:PackIcon RemoveCircle}" />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Col 1: Other Parameters  -->
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Orientation="Vertical">
+                    <ComboBox
+                        Name="PMReleasedVersionComboBox"
+                        materialDesign:HintAssist.Hint="Released"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PMVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PMReleasedVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <ComboBox
+                        Name="PMBetaVersionComboBox"
+                        materialDesign:HintAssist.Hint="Beta"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PMVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PMBetaVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <ComboBox
+                        Name="PMDevVersionComboBox"
+                        materialDesign:HintAssist.Hint="Dev"
+                        IsSynchronizedWithCurrentItem="False"
+                        ItemsSource="{Binding ElementName=PMVersionsList, Path=Items}"
+                        SelectedItem="{Binding Path=PMDevVersion}"
+                        Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
+
+                    <TextBox
+                        Name="PMIterationText"
+                        materialDesign:HintAssist.Hint="Iteration"
+                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                        Text="{Binding Path=PMIteration, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <!--  Row 3: UI Colours  -->
+        <GroupBox
+            Grid.Row="3"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Margin="0,10,0,0"
+            Header="UI Colours">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Margin="0,0,5,0" Text="Waiting:" />
+
+                <Button
+                    x:Name="WaitingColourButton"
+                    Background="{DynamicResource WaitingColour}"
+                    Click="WaitingColourButton_Click"
+                    Style="{StaticResource StyleColourButton}" />
+
+                <TextBlock Margin="5,0,5,0" Text="In Progress:" />
+
+                <Button
+                    x:Name="InProgressColourButton"
+                    Background="{DynamicResource InProgressColour}"
+                    Click="InProgressColourButton_Click"
+                    Style="{StaticResource StyleColourButton}" />
+
+                <TextBlock Margin="5,0,5,0" Text="Done:" />
+
+                <Button
+                    x:Name="DoneColourButton"
+                    Background="{DynamicResource DoneColour}"
+                    Click="DoneColourButton_Click"
+                    Style="{StaticResource StyleColourButton}" />
+
+                <TextBlock Margin="5,0,5,0" Text="Ready:" />
+
+                <Button
+                    x:Name="ReadyColourButton"
+                    Background="{DynamicResource ReadyColour}"
+                    Click="ReadyColourButton_Click"
+                    Style="{StaticResource StyleColourButton}" />
+
+                <TextBlock Margin="5,0,5,0" Text="Not Ready:" />
+
+                <Button
+                    x:Name="NotReadyColourButton"
+                    Background="{DynamicResource NotReadyColour}"
+                    Click="NotReadyColourButton_Click"
+                    Style="{StaticResource StyleColourButton}" />
+            </StackPanel>
+        </GroupBox>
+
+        <!--  Row 4: Grid Parameters  -->
+        <GroupBox
+            Grid.Row="4"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            Margin="0,10,0,0"
+            Header="Grid Parameters">
+            <WrapPanel Width="420" Orientation="Horizontal">
+                <TextBlock Text="Display columns:" />
+                <CheckBox
+                    Margin="5"
+                    Content="Project"
+                    IsChecked="{Binding Path=DisplayProject, Mode=TwoWay}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Status"
+                    IsChecked="{Binding Path=DisplayStatus}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Priority"
+                    IsChecked="{Binding Path=DisplayPriority}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Version"
+                    IsChecked="{Binding Path=DisplayVersion}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Type"
+                    IsChecked="{Binding Path=DisplayType}" />
+                <CheckBox
+                    Margin="5"
+                    Content="TFS"
+                    IsChecked="{Binding Path=DisplayTFS}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Description"
+                    IsChecked="{Binding Path=DisplayDescription}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Ticket"
+                    IsChecked="{Binding Path=DisplayTicket}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Customer"
+                    IsChecked="{Binding Path=DisplayCustomer}" />
+                <CheckBox
+                    Margin="5"
+                    Content="User Story"
+                    IsChecked="{Binding Path=DisplayUserStory}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Dev Task"
+                    IsChecked="{Binding Path=DisplayDevTask}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Developer"
+                    IsChecked="{Binding Path=DisplayDeveloper}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Iteration"
+                    IsChecked="{Binding Path=DisplayIteration}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Notes"
+                    IsChecked="{Binding Path=DisplayNotes}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Created Date"
+                    IsChecked="{Binding Path=DisplayCreatedDate}" />
+                <CheckBox
+                    Margin="5"
+                    Content="Closed Date"
+                    IsChecked="{Binding Path=DisplayClosedDate}" />
+            </WrapPanel>
+        </GroupBox>
+
+        <!--  Row 5: Bottom Buttons  -->
+        <StackPanel
+            Grid.Row="5"
+            Grid.Column="2"
+            Margin="0,10,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                x:Name="SaveButton"
+                Width="75"
+                Margin="10,0,0,0"
+                Click="SaveButton_Click"
+                Content="Save" />
+            <Button
+                x:Name="CancelButton"
+                Width="75"
+                Margin="10,0,0,0"
+                Click="CancelButton_Click"
+                Content="Cancel" />
+        </StackPanel>
+    </Grid>
+</UserControl>
