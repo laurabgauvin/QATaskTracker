@@ -35,7 +35,7 @@ namespace QATaskTracker.ViewModels
                 Parameters = dbManager.LoadParameters();
                 AllTasks = dbManager.GetAllTasks();
             }
-            DisplayedTasks = new ObservableCollection<TFSTask>(AllTasks.Where(x => x.Status != TFSStatus.NotReady && x.Status != TFSStatus.Done));
+            DisplayedTasks = new ObservableCollection<TFSTask>(AllTasks);
 
             ModifiedCount = 0;
             timer.Tick += TimerTick;
@@ -94,8 +94,7 @@ namespace QATaskTracker.ViewModels
                 DisplayedTasks.Clear();
                 foreach(TFSTask task in temp)
                 {
-                    if (task.Status != TFSStatus.NotReady && task.Status != TFSStatus.Done)
-                        DisplayedTasks.Add(task);
+                    DisplayedTasks.Add(task);
                 }
             }
             else

@@ -76,7 +76,7 @@ namespace QATaskTracker.Database
                 ")";
 
             // Run query
-            SQLiteCommand command = new(query.ToString(), connection);
+            SQLiteCommand command = new(query, connection);
             int rowsModified = command.ExecuteNonQuery();
 
             task.Reset(false);
@@ -122,7 +122,7 @@ namespace QATaskTracker.Database
                 ")";
 
             // Run query
-            SQLiteCommand command = new(query.ToString(), connection);
+            SQLiteCommand command = new(query, connection);
             int rowsModified = command.ExecuteNonQuery();
 
             versionDetail.Reset();
@@ -169,7 +169,7 @@ namespace QATaskTracker.Database
                 $"Version = '{PrepareString(versionDetail.Version)}'";
 
             // Run query
-            SQLiteCommand command = new(query.ToString(), connection);
+            SQLiteCommand command = new(query, connection);
             int rowsModified = command.ExecuteNonQuery();
 
             versionDetail.Reset();
@@ -192,7 +192,7 @@ namespace QATaskTracker.Database
 
             // Populate list of TFSTask
             string query = "SELECT * FROM TaskHeader";
-            SQLiteCommand command = new(query.ToString(), connection);
+            SQLiteCommand command = new(query, connection);
             SQLiteDataAdapter dataAdapter = new(command);
             dataAdapter.Fill(taskHeaderTable);
 
@@ -204,7 +204,7 @@ namespace QATaskTracker.Database
 
             // Populate list of TaskVersionDetail
             query = "SELECT * FROM TaskVersionDetail";
-            command = new SQLiteCommand(query.ToString(), connection);
+            command = new SQLiteCommand(query, connection);
             dataAdapter = new SQLiteDataAdapter(command);
             dataAdapter.Fill(taskVersionDetailTable);
 
@@ -238,7 +238,7 @@ namespace QATaskTracker.Database
 
             // Run query
             string query = "SELECT * FROM AppParameters";
-            SQLiteCommand command = new(query.ToString(), connection);
+            SQLiteCommand command = new(query, connection);
             SQLiteDataAdapter dataAdapter = new(command);
             dataAdapter.Fill(table);
 
@@ -315,7 +315,7 @@ namespace QATaskTracker.Database
 
                 // Compare current value to new value
                 string selectQuery = $"SELECT ParamValue from AppParameters where ParamName = '{paramName}'";
-                SQLiteCommand selectCommand = new(selectQuery.ToString(), connection);
+                SQLiteCommand selectCommand = new(selectQuery, connection);
                 SQLiteDataAdapter selectData = new(selectCommand);
                 DataTable selectTable = new();
                 selectData.Fill(selectTable);
@@ -329,7 +329,7 @@ namespace QATaskTracker.Database
                         $"'{PrepareString(paramValue)}', " +
                         $"'{dateModified}' " +
                         ")";
-                    SQLiteCommand insertCommand = new(insertQuery.ToString(), connection);
+                    SQLiteCommand insertCommand = new(insertQuery, connection);
                     if (insertCommand.ExecuteNonQuery() != 1)
                         result = false;
                 }
@@ -339,7 +339,7 @@ namespace QATaskTracker.Database
                     string updateQuery = $"UPDATE AppParameters " +
                         $"SET ParamValue = '{PrepareString(paramValue)}', LastChanged = '{dateModified}' " +
                         $"WHERE ParamName = '{paramName}'";
-                    SQLiteCommand updateCommand = new(updateQuery.ToString(), connection);
+                    SQLiteCommand updateCommand = new(updateQuery, connection);
                     if (updateCommand.ExecuteNonQuery() != 1)
                         result = false;
                 }
